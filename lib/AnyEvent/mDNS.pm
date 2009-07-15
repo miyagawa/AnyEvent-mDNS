@@ -6,10 +6,10 @@ our $VERSION = '0.01';
 
 use AnyEvent::DNS;
 use AnyEvent::Handle;
-use AnyEvent::Socket;
+use AnyEvent::Socket ();
 use Socket;
 
-sub discover($%) {
+sub discover($%) { ## no critic
     my $callback;
     $callback = pop if @_ % 2 == 0;
 
@@ -21,7 +21,7 @@ sub discover($%) {
     my $udp_proto = $AnyEvent::Socket::PROTO_BYNAME{udp} || getprotobyname('udp');
     socket my($sock), PF_INET, SOCK_DGRAM, $udp_proto;
     AnyEvent::Util::fh_nonblocking $sock, 1;
-    bind $sock, sockaddr_in(0, inet_aton('0.0.0.0'))
+    bind $sock, sockaddr_in(0, Socket::inet_aton('0.0.0.0'))
         or ($args{on_error} || sub { die @_ })->($!);
 
     my @found;
@@ -59,7 +59,7 @@ sub discover($%) {
         },
     );
 
-    send $sock, $data, 0, sockaddr_in(5353, inet_aton('224.0.0.251'));
+    send $sock, $data, 0, sockaddr_in(5353, Socket::inet_aton('224.0.0.251'));
     defined wantarray && AnyEvent::Util::guard { undef $t };
 }
 
@@ -69,6 +69,7 @@ __END__
 =encoding utf-8
 
 =for stopwords
+AnyEvent multicast DNS UDP mDNS
 
 =head1 NAME
 
