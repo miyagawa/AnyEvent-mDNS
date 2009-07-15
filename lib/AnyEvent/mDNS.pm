@@ -18,7 +18,8 @@ sub discover($%) {
     my $fqdn = "$proto.local";
     my $data = AnyEvent::DNS::dns_pack { rd => 1, qd => [[$fqdn, "ptr"]] };
 
-    socket my($sock), PF_INET, SOCK_DGRAM, $AnyEvent::Socket::PROTO_BYNAME{udp};
+    my $udp_proto = $AnyEvent::Socket::PROTO_BYNAME{udp} || getprotobyname('udp');
+    socket my($sock), PF_INET, SOCK_DGRAM, $udp_proto;
     AnyEvent::Util::fh_nonblocking $sock, 1;
     bind $sock, sockaddr_in(0, inet_aton('0.0.0.0'))
         or ($args{on_error} || sub { die @_ })->($!);
