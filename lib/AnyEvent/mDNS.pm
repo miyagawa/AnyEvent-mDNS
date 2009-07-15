@@ -10,7 +10,9 @@ use AnyEvent::Socket;
 use Socket;
 
 sub discover($%) {
-    my $callback = pop;
+    my $callback;
+    $callback = pop if @_ % 2 == 0;
+
     my($proto, %args) = @_;
 
     my $fqdn = "$proto.local";
@@ -109,13 +111,14 @@ The UDP socket for the DNS query times out in 3 seconds, and all the
 services found are passed to the callback you specified with
 C<on_timeout> (after the timeout).
 
-Though the timeout is done in a non-blockin way, you might want to
+Although the timeout is done in a non-blocking way, you might want to
 retrieve the service as soon as possible, in which case you specify
-another callback as the last argument, then each service is passed to
-the callback as it's found.
+another callback as the last argument, then each service will be
+passed to the callback as it's found.
 
 You can obviously write your own AnyEvent timer loop to run this mDNS
-query from time to time, to keep the discovered list up-to-date.
+query from time to time with smart interval (See the Multicast DNS
+Internet Draft for details), to keep the discovered list up-to-date.
 
 =back
 
