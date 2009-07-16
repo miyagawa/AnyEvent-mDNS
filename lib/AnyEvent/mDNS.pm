@@ -24,7 +24,7 @@ sub discover($%) { ## no critic
     bind $sock, sockaddr_in(0, Socket::inet_aton('0.0.0.0'))
         or ($args{on_error} || sub { die @_ })->($!);
 
-    my @found;
+    my %found;
     my $cb = $args{on_timeout} || sub {};
 
     my $t; $t = AnyEvent::Handle->new(
@@ -32,7 +32,7 @@ sub discover($%) { ## no critic
         timeout => 3,
         on_timeout => sub {
             undef $t;
-            $cb->(@found);
+            $cb->(values %found);
         },
         on_read => sub {
             my $handle = shift;
@@ -53,8 +53,10 @@ sub discover($%) { ## no critic
                     proto => $proto,
                 };
 
-                $callback->($service) if $callback;
-                push @found, $service;
+                $found{$rr[0]->[3]} ||= do {
+                    $callback->($service) if $callback;
+                    $service;
+                };
             }
         },
     );
