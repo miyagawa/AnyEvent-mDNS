@@ -2,7 +2,7 @@ use inc::Module::Install;
 name 'AnyEvent-mDNS';
 all_from 'lib/AnyEvent/mDNS.pm';
 
-requires 'AnyEvent', 4.75;
+requires 'AnyEvent', 4.84;
 
 build_requires 'Test::More';
 use_test_base;
