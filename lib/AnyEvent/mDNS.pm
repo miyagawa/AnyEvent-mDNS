@@ -4,6 +4,7 @@ use strict;
 use 5.008_001;
 our $VERSION = '0.03';
 
+use AnyEvent 4.84;
 use AnyEvent::DNS;
 use AnyEvent::Handle;
 use AnyEvent::Socket ();
@@ -18,7 +19,7 @@ sub discover($%) { ## no critic
     my $fqdn = "$proto.local";
     my $data = AnyEvent::DNS::dns_pack { rd => 1, qd => [[$fqdn, "ptr"]] };
 
-    my $udp_proto = $AnyEvent::Socket::PROTO_BYNAME{udp} || getprotobyname('udp');
+    my($name, $alias, $udp_proto) = AnyEvent::Socket::getprotobyname('udp');
     socket my($sock), PF_INET, SOCK_DGRAM, $udp_proto;
     AnyEvent::Util::fh_nonblocking $sock, 1;
     bind $sock, sockaddr_in(0, Socket::inet_aton('0.0.0.0'))
