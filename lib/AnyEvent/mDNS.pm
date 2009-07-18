@@ -2,7 +2,7 @@ package AnyEvent::mDNS;
 
 use strict;
 use 5.008_001;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use AnyEvent::DNS;
 use AnyEvent::Handle;
