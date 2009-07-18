@@ -10,8 +10,8 @@ use AnyEvent::Socket ();
 use Socket;
 
 sub discover($%) { ## no critic
-    my $callback;
-    $callback = pop if @_ % 2 == 0;
+    my $cb = sub {};
+    $cb = pop if @_ % 2 == 0;
 
     my($proto, %args) = @_;
 
@@ -25,11 +25,11 @@ sub discover($%) { ## no critic
         or ($args{on_error} || sub { die @_ })->($!);
 
     my %found;
-    my $cb = $args{on_timeout} || sub {};
+    my $callback = $args{on_found} || sub {};
 
     my $t; $t = AnyEvent::Handle->new(
         fh => $sock,
-        timeout => 3,
+        timeout => $args{timeout} || 3,
         on_timeout => sub {
             undef $t;
             $cb->(values %found);
@@ -83,12 +83,12 @@ AnyEvent::mDNS - Multicast DNS in AnyEvent style
 
   my $cv = AnyEvent->condvar;
 
-  AnyEvent::mDNS::discover '_http._tcp', on_timeout => $cv, sub {
-      my $service = shift;
-      warn "Found $service->{name} ($service->{proto}) running on $service->{host}:$service->{port}\n";
-  };
+  AnyEvent::mDNS::discover '_http._tcp', $cv;
 
-  $cv->recv;
+  my @services = $cv->recv;
+  for my $service (@_) {
+      warn "Found $service->{name} ($service->{proto}) running on $service->{host}:$service->{port}\n";
+  }
 
 =head1 DESCRIPTION
 
@@ -100,25 +100,30 @@ AnyEvent::mDNS is a multicast DNS resolver using AnyEvent framework.
 
 =item discover
 
-  # receive service as it's found (faster)
-  AnyEvent::mDNS::discover $proto, on_timeout => $cv, $cb->($service_as_found);
-
-  # receive all services in one shot (but after a timeout)
-  AnyEvent::mDNS::discover $proto, on_timeout => $cv;
-  my @all_services = $cv->recv;
-
 Run multicast DNS query and receive the services discovered with the
 callback. The callback is passed with the service as a hash reference
 with keys: C<host>, C<port>, C<proto> and C<name>.
 
-The UDP socket for the DNS query times out in 3 seconds, and all the
-services found are passed to the callback you specified with
-C<on_timeout> (after the timeout).
+The UDP socket for the DNS query times out in 3 seconds by default,
+which you can change with C<timeout> parameter, and all the services
+found are passed to the callback after the timeout.
+
+  # receive all services in one shot, after 5 sec timeout
+  my $cv = AnyEvent->condvar;
+  AnyEvent::mDNS::discover $proto, timeout => 5, $cv;
+  my @all_services = $cv->recv;
 
 Although the timeout is done in a non-blocking way, you might want to
 retrieve the service as soon as possible, in which case you specify
-another callback as the last argument, then each service will be
+another callback with the key C<on_found>, then each service will be
 passed to the callback as it's found.
+
+  # receive service as it's found (faster)
+  AnyEvent::mDNS::discover $proto, on_found => sub {
+      my $service = shift;
+      # ...
+  }, $cv;
+  $cv->recv;
 
 You can obviously write your own AnyEvent timer loop to run this mDNS
 query from time to time with smart interval (See the Multicast DNS
