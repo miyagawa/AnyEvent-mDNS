@@ -57,13 +57,16 @@ sub discover($%) { ## no critic
         },
     );
 
-    my $timeout = AnyEvent->timer(
-        after => $args{timeout} || 3,
-        cb => sub {
-            undef $t;
-            $cb->(values %found);
-        },
-    );
+    my $timeout;
+    unless (defined $args{timeout} && $args{timeout} == 0) {
+        $timeout = AnyEvent->timer(
+            after => $args{timeout} || 3,
+            cb => sub {
+                undef $t;
+                $cb->(values %found);
+            },
+        );
+    }
 
     send $sock, $data, 0, sockaddr_in(5353, Socket::inet_aton('224.0.0.251'));
     defined wantarray && AnyEvent::Util::guard { undef $t; undef $timeout };
