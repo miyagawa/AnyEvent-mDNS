@@ -6,7 +6,6 @@ our $VERSION = '0.03';
 
 use AnyEvent 4.84;
 use AnyEvent::DNS;
-use AnyEvent::Handle;
 use AnyEvent::Socket ();
 use Socket;
 
@@ -28,16 +27,12 @@ sub discover($%) { ## no critic
     my %found;
     my $callback = $args{on_found} || sub {};
 
-    my $t; $t = AnyEvent::Handle->new(
+    my $t; $t = AnyEvent->io(
         fh => $sock,
-        timeout => $args{timeout} || 3,
-        on_timeout => sub {
-            undef $t;
-            $cb->(values %found);
-        },
-        on_read => sub {
-            my $handle = shift;
-            my $buf = delete $handle->{rbuf};
+        poll => 'r',
+        cb => sub {
+            my $buf;
+            recv $sock, $buf, 512, 0;
             my $res = AnyEvent::DNS::dns_unpack $buf;
 
             my @rr  = grep { lc $_->[0] eq $fqdn && $_->[1] eq 'ptr' } @{ $res->{an} };
@@ -62,8 +57,16 @@ sub discover($%) { ## no critic
         },
     );
 
+    my $timeout = AnyEvent->timer(
+        after => $args{timeout} || 3,
+        cb => sub {
+            undef $t;
+            $cb->(values %found);
+        },
+    );
+
     send $sock, $data, 0, sockaddr_in(5353, Socket::inet_aton('224.0.0.251'));
-    defined wantarray && AnyEvent::Util::guard { undef $t };
+    defined wantarray && AnyEvent::Util::guard { undef $t; undef $timeout };
 }
 
 1;
