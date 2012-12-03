@@ -1,5 +1,8 @@
 Revision history for Perl extension AnyEvent::mDNS
 
+0.05  Mon Jul 20 17:00:51 PDT 2009
+        - Revert the changes made in 0.04 -- it's buggy
+
 0.04  Mon Jul 20 16:47:50 PDT 2009
         - Do not use AnyEvent::Handle to favor AnyEvent->io
         - Runs its own timer to emulate UDP timeout (unless timeout is set to 0)

@@ -2,10 +2,11 @@ package AnyEvent::mDNS;
 
 use strict;
 use 5.008_001;
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use AnyEvent 4.84;
 use AnyEvent::DNS;
+use AnyEvent::Handle;
 use AnyEvent::Socket ();
 use Socket;
 
@@ -27,12 +28,16 @@ sub discover($%) { ## no critic
     my %found;
     my $callback = $args{on_found} || sub {};
 
-    my $t; $t = AnyEvent->io(
+    my $t; $t = AnyEvent::Handle->new(
         fh => $sock,
-        poll => 'r',
-        cb => sub {
-            my $buf;
-            recv $sock, $buf, 512, 0;
+        timeout => $args{timeout} || 3,
+        on_timeout => sub {
+            undef $t;
+            $cb->(values %found);
+        },
+        on_read => sub {
+            my $handle = shift;
+            my $buf = delete $handle->{rbuf};
             my $res = AnyEvent::DNS::dns_unpack $buf;
 
             my @rr  = grep { lc $_->[0] eq $fqdn && $_->[1] eq 'ptr' } @{ $res->{an} };
@@ -57,19 +62,8 @@ sub discover($%) { ## no critic
         },
     );
 
-    my $timeout;
-    unless (defined $args{timeout} && $args{timeout} == 0) {
-        $timeout = AnyEvent->timer(
-            after => $args{timeout} || 3,
-            cb => sub {
-                undef $t;
-                $cb->(values %found);
-            },
-        );
-    }
-
     send $sock, $data, 0, sockaddr_in(5353, Socket::inet_aton('224.0.0.251'));
-    defined wantarray && AnyEvent::Util::guard { undef $t; undef $timeout };
+    defined wantarray && AnyEvent::Util::guard { undef $t };
 }
 
 1;
