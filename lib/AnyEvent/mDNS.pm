@@ -6,7 +6,7 @@ our $VERSION = '0.05';
 
 use AnyEvent 4.84;
 use AnyEvent::DNS;
-use AnyEvent::Handle;
+use AnyEvent::Handle::UDP;
 use AnyEvent::Socket ();
 use Socket;
 
