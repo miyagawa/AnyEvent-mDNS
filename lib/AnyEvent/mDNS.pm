@@ -28,16 +28,15 @@ sub discover($%) { ## no critic
     my %found;
     my $callback = $args{on_found} || sub {};
 
-    my $t; $t = AnyEvent::Handle->new(
+    my $t; $t = AnyEvent::Handle::UDP->new(
         fh => $sock,
         timeout => $args{timeout} || 3,
         on_timeout => sub {
             undef $t;
             $cb->(values %found);
         },
-        on_read => sub {
-            my $handle = shift;
-            my $buf = delete $handle->{rbuf};
+        on_recv => sub {
+            my $buf = shift;
             my $res = AnyEvent::DNS::dns_unpack $buf;
 
             my @rr  = grep { lc $_->[0] eq $fqdn && $_->[1] eq 'ptr' } @{ $res->{an} };
