@@ -1,5 +1,9 @@
 Revision history for Perl extension AnyEvent::mDNS
 
+0.06  Fri Dec 28 19:50:14 PST 2012
+        - Use AnyEvent::Handle::UDP to make it actually work again (Leon Timmermans)
+        - Fixed the parsing of DNS unpack result
+
 0.05  Mon Jul 20 17:00:51 PDT 2009
         - Revert the changes made in 0.04 -- it's buggy
 
