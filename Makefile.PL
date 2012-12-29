@@ -3,7 +3,7 @@ name 'AnyEvent-mDNS';
 all_from 'lib/AnyEvent/mDNS.pm';
 
 requires 'AnyEvent', 7;
-requires 'AnyEvent::Handle::UDP';
+requires 'AnyEvent::Handle::UDP', 0.038;
 
 build_requires 'Test::More';
 use_test_base;
