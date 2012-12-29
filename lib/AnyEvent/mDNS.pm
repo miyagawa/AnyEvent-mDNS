@@ -43,17 +43,17 @@ sub discover($%) { ## no critic
             my @srv = grep { $_->[1] eq 'srv' } @{$res->{ar}};
 
             if (@rr == 1 && @srv == 1) {
-                my $name = $rr[0]->[3];
+                my $name = $rr[0]->[4];
                 $name =~ s/\.$fqdn$//;
 
                 my $service = {
                     name => $name,
-                    host => $srv[0]->[6],
-                    port => $srv[0]->[5],
+                    host => $srv[0]->[7],
+                    port => $srv[0]->[6],
                     proto => $proto,
                 };
 
-                $found{$rr[0]->[3]} ||= do {
+                $found{$rr[0]->[4]} ||= do {
                     $callback->($service) if $callback;
                     $service;
                 };
